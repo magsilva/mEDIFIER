@@ -305,6 +305,7 @@ MainWindow* MainWindow::m_ptr = nullptr;
 const char* MainWindow::m_translatedNames[] =
 {
     QT_TR_NOOP("Generic Device"),
+    QT_TR_NOOP("W820NB"),
     QT_TR_NOOP("W820NB Double Gold"),
     QT_TR_NOOP("W200BT Plus"),
 };

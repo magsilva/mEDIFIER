@@ -15,7 +15,7 @@ I just don't know why the Edifier Connect takes up more than 200MB on my phone.
 + Restore settings from file
 
 # Cons
-+ Tested on W820NB Double Gold and W200BT Plus only  
++ Tested on W820NB, W820NB Double Gold and W200BT Plus only  
   (Maybe works for W820NB Plus and W820NB somehow)  
 + The BLE connection on Windows hardly works  
 + Sending raw commands to your device might break it  
