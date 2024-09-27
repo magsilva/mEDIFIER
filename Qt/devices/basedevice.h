@@ -27,7 +27,7 @@ public:
     const QString &deviceName() const { return m_deviceName;}
 public slots:
     void processData(const QByteArray &data);
-    void readSettings();
+    void readSettings(bool force = false);
 protected:
     Ui::BaseDevice *ui;
     bool m_isSavingToFile = false;

@@ -315,9 +315,9 @@ void BaseDevice::processData(const QByteArray& data)
     }
 }
 
-void BaseDevice::readSettings()
+void BaseDevice::readSettings(bool force)
 {
-    const int interval = 150;
+    int interval = 150;
     int i = 0;
 
     QTimer::singleShot(i, [ = ] {on_batteryGetButton_clicked();});
@@ -326,47 +326,51 @@ void BaseDevice::readSettings()
     i += interval;
     QTimer::singleShot(i, [ = ] {on_firmwareGetButton_clicked();});
     i += interval;
-    if(ui->ambientSoundGroup->isVisible())
+
+    if (force)
+        interval=50;
+
+    if(ui->ambientSoundGroup->isVisible() || force )
     {
         QTimer::singleShot(i, [ = ] {emit sendCommand("CC");});
         i += interval;
     }
-    if(ui->nameGroup->isVisible())
+    if(ui->nameGroup->isVisible() || force)
     {
         QTimer::singleShot(i, [ = ] {emit sendCommand("C9");});
         i += interval;
     }
-    if(ui->soundEffectGroup->isVisible())
+    if(ui->soundEffectGroup->isVisible() || force)
     {
         QTimer::singleShot(i, [ = ] {emit sendCommand("D5");});
         i += interval;
     }
-    if(ui->gameModeBox->isVisible())
+    if(ui->gameModeBox->isVisible() || force)
     {
         QTimer::singleShot(i, [ = ] {emit sendCommand("08");});
         i += interval;
     }
-    if(ui->controlSettingsGroup->isVisible())
+    if(ui->controlSettingsGroup->isVisible() || force)
     {
         QTimer::singleShot(i, [ = ] {emit sendCommand("F00A");});
         i += interval;
     }
-    if(ui->LDACGroup->isVisible())
+    if(ui->LDACGroup->isVisible() || force)
     {
         QTimer::singleShot(i, [ = ] {emit sendCommand("48");});
         i += interval;
     }
-    if(ui->promptVolumeGroup->isVisible())
+    if(ui->promptVolumeGroup->isVisible() || force)
     {
         QTimer::singleShot(i, [ = ] {emit sendCommand("05");});
         i += interval;
     }
-    if(ui->shutdownTimerGroup->isVisible())
+    if(ui->shutdownTimerGroup->isVisible() || force)
     {
         QTimer::singleShot(i, [ = ] {emit sendCommand("D3");});
         i += interval;
     }
-    if(ui->autoPoweroffBox->isVisible())
+    if(ui->autoPoweroffBox->isVisible() || force)
     {
         QTimer::singleShot(i, [ = ] {emit sendCommand("D7");});
         i += interval;
