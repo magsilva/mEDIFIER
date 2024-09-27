@@ -8,6 +8,7 @@
 #include <QScrollBar>
 #include <QMessageBox>
 #include <QFile>
+#include <QDir>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -30,20 +31,21 @@ MainWindow::MainWindow(QWidget *parent)
 #ifdef Q_OS_ANDROID
     m_settings = new QSettings("wh201906", "mEDIFIER");
 #else
-    // Firstly, find it in current working directory
-    QString configPath = "preference.ini";
+    // Firstly, find it in appConfig directory
+    QString configPath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation) + "/" + "preference.ini";
     if(!QFileInfo::exists(configPath))
     {
-        // Then, find it in AppConfigLocation
-        configPath = QStandardPaths::locate(QStandardPaths::AppConfigLocation, "preference.ini");
-        if(configPath.isEmpty() || !QFileInfo::exists(configPath))
-        {
+        QDir d{configPath};
+        if (!d.mkpath(d.absolutePath())) {
             // If no config file is found, create one in current working directory
             configPath = "preference.ini";
         }
     }
     m_settings = new QSettings(configPath, QSettings::IniFormat);
     m_settings->setIniCodec("UTF-8");
+
+    restoreGeometry(m_settings->value("MainWidget/geometry").toByteArray());
+    restoreState(m_settings->value("MainWidget/windowState").toByteArray());
 #endif
 
     m_deviceForm = new DeviceForm;
@@ -71,6 +73,16 @@ MainWindow::MainWindow(QWidget *parent)
     QScroller::grabGesture(ui->scrollArea);
 //    ui->scrollArea->horizontalScrollBar()->setEnabled(false);
 
+    m_autoConnect = m_settings->value("Global/AutoConnect", false).toBool();
+    if ( m_autoConnect )
+    {
+        m_settings->beginGroup("DeviceForm");
+        auto addressStr = m_settings->value("LastDeviceAddress").toString();
+        bool isBLE = m_settings->value("LastDeviceType").toString() == tr("BLE");
+        m_settings->endGroup();
+
+        connectToDevice(addressStr,isBLE);
+    }
 }
 
 MainWindow::~MainWindow()
@@ -99,6 +111,27 @@ void MainWindow::loadDeviceInfo()
     }
 }
 
+void MainWindow::switchToDevice()
+{
+    auto lastDevice = m_settings->value("Global/LastAudioDeviceName", QString()).toString();
+    if ( !lastDevice.isEmpty() )
+    {
+        // changeDevice( lastDevice );
+        //
+        ui->tabWidget->setCurrentIndex(1);
+        QDateTime killTime = QDateTime::currentDateTime().addSecs(5);
+        while ( !m_connected && QDateTime::currentDateTime() < killTime )
+        {
+            qApp->processEvents(QEventLoop::AllEvents,100);
+        }
+        // QTimer::singleShot(100, [&] {emit readSettings();});
+        // emit readSettings();
+        if (m_device)
+            m_device->readSettings(true);
+
+    }
+}
+
 void MainWindow::connectToDevice(const QString& address, bool isBLE)
 {
     if(m_comm != nullptr)
@@ -116,6 +149,11 @@ void MainWindow::connectToDevice(const QString& address, bool isBLE)
     connectDevice2Comm();
 
     m_comm->open(address);
+
+    if (m_autoConnect)
+    {
+        switchToDevice();
+    }
 }
 
 void MainWindow::disconnectDevice()
@@ -171,6 +209,8 @@ void MainWindow::connectToAudio(const QString& address)
         addressObj = QAndroidJniObject::fromString(address);
     }
     QtAndroid::androidActivity().callMethod<void>("connectToDevice", "(Ljava/lang/String;)V", addressObj.object<jstring>());
+#else
+    Q_UNUSED(address)
 #endif
 }
 
@@ -178,6 +218,9 @@ void MainWindow::updateLastAudioDeviceAddress(const QString& address)
 {
     m_settings->beginGroup("Global");
     m_settings->setValue("LastAudioDeviceAddress", address);
+    const BaseDevice* ptr = qobject_cast<BaseDevice*>(QObject::sender());
+    if (ptr)
+        m_settings->setValue("LastAudioDeviceName", ptr->deviceName());
     m_settings->endGroup();
 }
 
@@ -291,6 +334,15 @@ void MainWindow::on_tabWidget_tabBarClicked(int index)
         }
     }
     QTimer::singleShot(5000, [&] {m_clickCounter = 0;});
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+#ifndef Q_OS_ANDROID
+    m_settings->setValue("MainWidget/geometry", saveGeometry());
+    m_settings->setValue("MainWidget/windowState", saveState());
+#endif
+    QMainWindow::closeEvent(event);
 }
 
 void MainWindow::devMessageHandler(QtMsgType type, const QMessageLogContext& context, const QString& msg)

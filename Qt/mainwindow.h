@@ -39,6 +39,7 @@ private:
     DevForm* m_devForm = nullptr;
     Comm* m_comm = nullptr;
     bool m_connected = false;
+    bool m_autoConnect = false;
     BaseDevice* m_device = nullptr;
     QJsonObject* m_deviceInfo = nullptr;
     QHash<QBluetoothUuid, QString> m_deviceServiceMap;
@@ -51,6 +52,8 @@ private:
     void changeDevice(const QString &deviceName);
     void connectDevice2Comm();
     void loadDeviceInfo();
+
+    void switchToDevice();
 private slots:
     void connectToDevice(const QString &address, bool isBLE);
     void disconnectDevice();
@@ -64,7 +67,9 @@ private slots:
 
 signals:
     void commStateChanged(bool connected);
-    void readSettings();
+    void readSettings(bool force = false);
     void devMessage(QtMsgType type, const QMessageLogContext& context, const QString& msg);
+protected slots:
+    void closeEvent(QCloseEvent *event);
 };
 #endif // MAINWINDOW_H
