@@ -23,6 +23,8 @@ public:
     bool setMaxNameLength(int length);
     bool hideWidget(const QString &widgetName);
     void clearAddress();
+
+    const QString &deviceName() const { return m_deviceName;}
 public slots:
     void processData(const QByteArray &data);
     void readSettings();
