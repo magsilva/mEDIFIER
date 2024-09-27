@@ -15,8 +15,8 @@
 + 从文件导入设置
 
 # 缺点
-+ 仅测试过 W820NB双金标版 和 W200BT Plus  
-  (也许能用在 W820NB Plus 和 W820NB 上)  
++ 仅测试过 W820NB、W820NB双金标版 和 W200BT Plus  
+  (也许能用在 W820NB Plus 上)  
 + 在Windows端BLE连接几乎不可用  
 + 发送原始指令有可能损坏设备  
 

@@ -1,8 +1,17 @@
 {
-    "basedevice":{
+    "basedevice": {
         "Name": "Generic Device",
         "MaxNameLength": 24,
         "HiddenFeatures": []
+    },
+    "w820nb": {
+        "Name": "W820NB",
+        "UniqueServiceUUID": "48093801-1a48-11e9-ab14-d663bd873d93",
+        "MaxNameLength": 24,
+        "HiddenFeatures": [
+            "soundEffectGroup",
+            "controlSettingsGroup"
+        ]
     },
     "w820nbdoublegold": {
         "Name": "W820NB Double Gold",
