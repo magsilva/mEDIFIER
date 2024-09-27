@@ -9,6 +9,7 @@ int main(int argc, char *argv[])
     // Attribute Qt::AA_EnableHighDpiScaling must be set before QCoreApplication is created.
     QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QApplication a(argc, argv);
+    a.setApplicationName("mEDIFIER");
 
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();
