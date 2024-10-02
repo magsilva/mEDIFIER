@@ -5,6 +5,9 @@
 #include <QJsonArray>
 #include <QJsonObject>
 
+
+enum DeviceStatus { NO_DEVICE = 0, NORMAL, NOISE_CANCELATION, AMBIENT_SOUND };
+
 namespace Ui
 {
 class BaseDevice;
@@ -81,6 +84,8 @@ signals:
     void showMessage(const QString& msg);
     void connectToAudio(const QString &address);
     void updateLastAudioDeviceAddress(const QString &address);
+    // commands for tray status
+    void updateStatus( const DeviceStatus &status );
 private slots:
     void on_autoPoweroffBox_clicked();
     void on_fileSaveButton_clicked();

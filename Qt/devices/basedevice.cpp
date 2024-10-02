@@ -288,6 +288,32 @@ void BaseDevice::processData(const QByteArray& data)
                 ui->noiseReductionButton->setChecked(mode == '\x02');
                 ui->noiseAmbientSoundButton->setChecked(mode == '\x03');
                 ui->ASBox->setValue(ASVolume);
+                switch (mode) {
+                case '\x01':
+                    emit updateStatus( DeviceStatus::NORMAL );
+                    break;
+                case '\x02':
+                    emit updateStatus( DeviceStatus::NOISE_CANCELATION );
+                    break;
+                case '\x03':
+                    emit updateStatus( DeviceStatus::AMBIENT_SOUND );
+                    break;
+                }
+            }
+            else if(cmd == '\xC1' && len == 3)
+            {
+                char mode = data[3];
+                switch (mode) {
+                case '\x01':
+                    emit updateStatus( DeviceStatus::NORMAL );
+                    break;
+                case '\x02':
+                    emit updateStatus( DeviceStatus::NOISE_CANCELATION );
+                    break;
+                case '\x03':
+                    emit updateStatus( DeviceStatus::AMBIENT_SOUND );
+                    break;
+                }
             }
             else if(cmd == '\xC9')
             {
