@@ -10,6 +10,8 @@
 #include "comms/comm.h"
 #include "devices/basedevice.h"
 
+class QSystemTrayIcon;
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -34,7 +36,6 @@ public slots:
 private:
     Ui::MainWindow *ui;
 
-
     DeviceForm* m_deviceForm = nullptr;
     DevForm* m_devForm = nullptr;
     Comm* m_comm = nullptr;
@@ -49,11 +50,18 @@ private:
     static MainWindow* m_ptr;
     static const char* m_translatedNames[];
 
+    QSystemTrayIcon* m_sysTrayIcon;
+    QIcon m_noDevice;
+    QIcon m_deviceConnected_normal;
+    QIcon m_deviceConnected_noiseCancelation;
+    QIcon m_deviceConnected_ambientSound;
+
     void changeDevice(const QString &deviceName);
     void connectDevice2Comm();
     void loadDeviceInfo();
 
     void switchToDevice();
+    void createTrayIcon();
 private slots:
     void connectToDevice(const QString &address, bool isBLE);
     void disconnectDevice();
@@ -61,9 +69,10 @@ private slots:
     void on_readSettingsButton_clicked();
 
     void on_deviceBox_currentIndexChanged(int index);
+    void on_tabWidget_tabBarClicked(int index);
 
     void processDeviceFeature(const QString &feature, bool isBLE);
-    void on_tabWidget_tabBarClicked(int index);
+    void processDeviceStatus(const DeviceStatus &status);
 
 signals:
     void commStateChanged(bool connected);
@@ -71,5 +80,6 @@ signals:
     void devMessage(QtMsgType type, const QMessageLogContext& context, const QString& msg);
 protected slots:
     void closeEvent(QCloseEvent *event);
+    void changeEvent(QEvent *e);
 };
 #endif // MAINWINDOW_H

@@ -65,4 +65,5 @@ QMAKE_TARGET_COMPANY = "wh201906"
 win32: LIBS += -lBthprops
 
 RESOURCES += \
-    devices/devices.qrc
+    devices/devices.qrc \
+    icons/icons.qrc

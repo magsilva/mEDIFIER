@@ -15,6 +15,7 @@
 #include <QTimer>
 #include <QFileInfo>
 #include <QStandardPaths>
+#include <QSystemTrayIcon>
 #ifdef Q_OS_ANDROID
 #include <QtAndroid>
 #include <QAndroidJniEnvironment>
@@ -23,6 +24,7 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
+    , m_sysTrayIcon(new QSystemTrayIcon(this))
 {
     // MainWindow only have one instance so this should work
     m_ptr = this;
@@ -82,6 +84,11 @@ MainWindow::MainWindow(QWidget *parent)
         m_settings->endGroup();
 
         connectToDevice(addressStr,isBLE);
+    }
+
+    if ( m_settings->value("Global/EnableTray", false).toBool() )
+    {
+        createTrayIcon();
     }
 }
 
@@ -153,6 +160,11 @@ void MainWindow::connectToDevice(const QString& address, bool isBLE)
     if (m_autoConnect)
     {
         switchToDevice();
+    }
+
+    if ( m_sysTrayIcon && m_sysTrayIcon->isVisible() )
+    {
+        m_sysTrayIcon->setIcon( m_deviceConnected_normal );
     }
 }
 
@@ -288,6 +300,7 @@ void MainWindow::connectDevice2Comm()
     connect(m_device, QOverload<const char*, bool>::of(&BaseDevice::sendCommand), m_comm, QOverload<const char*, bool>::of(&Comm::sendCommand));
     connect(m_comm, &Comm::newData, m_device, &BaseDevice::processData);
     connect(m_comm, &Comm::deviceFeature, this, &MainWindow::processDeviceFeature);
+    connect(m_device, &BaseDevice::updateStatus, this, &MainWindow::processDeviceStatus);
 
     // Calling MainWindow::connectDevice2Comm() indicates the m_device is reconnected
     // Clear the cached MAC address
@@ -306,6 +319,23 @@ void MainWindow::processDeviceFeature(const QString& feature, bool isBLE)
             ui->deviceBox->setCurrentIndex(index); // triggers changeDevice()
             showMessage(tr("Device detected") + ": " + ui->deviceBox->currentText());
         }
+    }
+}
+
+void MainWindow::processDeviceStatus(const DeviceStatus &status)
+{
+    switch (status) {
+    case NORMAL:
+        m_sysTrayIcon->setIcon(m_deviceConnected_normal);
+        break;
+    case NOISE_CANCELATION:
+        m_sysTrayIcon->setIcon(m_deviceConnected_noiseCancelation);
+        break;
+    case AMBIENT_SOUND:
+        m_sysTrayIcon->setIcon(m_deviceConnected_ambientSound);
+        break;
+    default:
+        break;
     }
 }
 
@@ -344,6 +374,55 @@ void MainWindow::closeEvent(QCloseEvent *event)
 #endif
     QMainWindow::closeEvent(event);
 }
+
+void MainWindow::changeEvent(QEvent* e)
+{
+#ifndef Q_OS_ANDROID
+    switch (e->type())
+    {
+    case QEvent::WindowStateChange:
+    {
+        if (this->windowState() & Qt::WindowMinimized)
+        {
+            QTimer::singleShot(100, this, SLOT(hide()));
+        }
+
+        break;
+    }
+    default:
+        break;
+    }
+#endif
+    QMainWindow::changeEvent(e);
+}
+
+void MainWindow::createTrayIcon()
+{
+    m_noDevice = QIcon(":/icons/white_headphones_no-device.png");
+    m_deviceConnected_normal = QIcon(":/icons/white_headphones_connected.png");
+    m_deviceConnected_noiseCancelation = QIcon(":/icons/headphones_noise-cancelation.png");
+    m_deviceConnected_ambientSound = QIcon(":/icons/headphones_ambient.png");
+
+    m_sysTrayIcon->setIcon( m_noDevice );
+    setWindowIcon( m_noDevice );
+
+    // connect( m_sysTrayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(on_show_hide(QSystemTrayIcon::ActivationReason)) );
+
+    // QAction *quit_action = new QAction( "Exit", m_tray_icon );
+    // connect( quit_action, SIGNAL(triggered()), this, SLOT(on_exit()) );
+
+    // QAction *hide_action = new QAction( "Show/Hide", m_tray_icon );
+    // connect( hide_action, SIGNAL(triggered()), this, SLOT(on_show_hide()) );
+
+    // QMenu *tray_icon_menu = new QMenu;
+    // tray_icon_menu->addAction( hide_action );
+    // tray_icon_menu->addAction( quit_action );
+
+    // m_tray_icon->setContextMenu( tray_icon_menu );
+
+    m_sysTrayIcon->show();
+}
+
 
 void MainWindow::devMessageHandler(QtMsgType type, const QMessageLogContext& context, const QString& msg)
 {

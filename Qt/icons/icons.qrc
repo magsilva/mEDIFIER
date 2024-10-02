@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>headphones_connected-off.png</file>
+        <file>headphones_connected-noise-cancelation.png</file>
+        <file>headphones_connected-ambient.png</file>
+        <file>headphones_no-device.png</file>
+        <file>white_headphones_no-device.png</file>
+        <file>white_headphones_connected.png</file>
+        <file>white_headphones_connected-noise-cancelation.png</file>
+        <file>white_headphones_connected-ambient.png</file>
+        <file>headphones_ambient.png</file>
+        <file>headphones_noise-cancelation.png</file>
+    </qresource>
+</RCC>
