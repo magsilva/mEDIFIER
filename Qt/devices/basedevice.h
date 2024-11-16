@@ -6,7 +6,7 @@
 #include <QJsonObject>
 
 
-enum DeviceStatus { NO_DEVICE = 0, NORMAL, NOISE_CANCELATION, AMBIENT_SOUND };
+enum DeviceStatus { NO_DEVICE = 0, NORMAL, NOISE_CANCELATION, AMBIENT_SOUND, DISCONNECT = 10, POWEROFF = 99 };
 
 namespace Ui
 {
@@ -28,6 +28,7 @@ public:
     void clearAddress();
 
     const QString &deviceName() const { return m_deviceName;}
+    void setDeviceStatus(const DeviceStatus &status);
 public slots:
     void processData(const QByteArray &data);
     void readSettings(bool force = false);

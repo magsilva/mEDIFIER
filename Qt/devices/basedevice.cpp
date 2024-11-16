@@ -485,6 +485,29 @@ void BaseDevice::clearAddress()
     m_address.clear();
 }
 
+void BaseDevice::setDeviceStatus(const DeviceStatus &status)
+{
+    switch (status) {
+    case NORMAL:
+        emit pushCommand("C101", "Noise Reduction", 1);
+        break;
+    case NOISE_CANCELATION:
+        emit pushCommand("C102", "Noise Reduction", 1);
+        break;
+    case AMBIENT_SOUND:
+        emit pushCommand("C103", "Noise Reduction", 1);
+        break;
+    case DISCONNECT:
+        emit sendCommand("CD");
+        break;
+    case POWEROFF:
+        emit sendCommand("CE");
+        break;
+    default:
+        break;
+    }
+    }
+
 void BaseDevice::onCommandPushed(const QByteArray &cmd, const QString &name, int priority)
 {
     if(m_isSavingToFile)
