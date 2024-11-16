@@ -16,6 +16,8 @@
 #include <QFileInfo>
 #include <QStandardPaths>
 #include <QSystemTrayIcon>
+#include <QAction>
+#include <QMenu>
 #ifdef Q_OS_ANDROID
 #include <QtAndroid>
 #include <QAndroidJniEnvironment>
@@ -75,6 +77,11 @@ MainWindow::MainWindow(QWidget *parent)
     QScroller::grabGesture(ui->scrollArea);
 //    ui->scrollArea->horizontalScrollBar()->setEnabled(false);
 
+    if ( m_settings->value("Global/EnableTray", false).toBool() )
+    {
+        createTrayIcon();
+    }
+
     m_autoConnect = m_settings->value("Global/AutoConnect", false).toBool();
     if ( m_autoConnect )
     {
@@ -86,10 +93,7 @@ MainWindow::MainWindow(QWidget *parent)
         connectToDevice(addressStr,isBLE);
     }
 
-    if ( m_settings->value("Global/EnableTray", false).toBool() )
-    {
-        createTrayIcon();
-    }
+
 }
 
 MainWindow::~MainWindow()
@@ -166,6 +170,7 @@ void MainWindow::connectToDevice(const QString& address, bool isBLE)
     {
         m_sysTrayIcon->setIcon( m_deviceConnected_normal );
     }
+
 }
 
 void MainWindow::disconnectDevice()
@@ -181,11 +186,13 @@ void MainWindow::onCommStateChanged(bool state)
     {
         m_connected = true;
         emit commStateChanged(true);
+        m_trayDeviceMenu->setVisible(true);
     }
     else if(m_connected && !state)
     {
         m_connected = false;
         emit commStateChanged(false);
+        m_trayDeviceMenu->setVisible(false);
     }
 }
 
@@ -339,6 +346,45 @@ void MainWindow::processDeviceStatus(const DeviceStatus &status)
     }
 }
 
+void MainWindow::on_trayMenuModeChanged()
+{
+    auto ptr = qobject_cast<QAction*>(QObject::sender());
+    if ( ptr->objectName() == "mNormalSound" )
+    {
+        m_device->setDeviceStatus(DeviceStatus::NORMAL);
+    }
+    else if ( ptr->objectName() == "mAmbientSound" )
+    {
+        m_device->setDeviceStatus(DeviceStatus::AMBIENT_SOUND);
+    }
+    else if ( ptr->objectName() == "mReductionSound" )
+    {
+        m_device->setDeviceStatus(DeviceStatus::NOISE_CANCELATION);
+    }
+    else
+    {
+        qDebug() << "unknown action called";
+    }
+}
+
+void MainWindow::on_trayMenuDevicePowerOff()
+{
+    auto ans = QMessageBox::question(this, tr("Powering off the device"), tr("Are you sure?"), QMessageBox::Yes | QMessageBox::No, QMessageBox::No );
+    if ( ans == QMessageBox::Yes )
+    {
+        changeDeviceStatus( DeviceStatus::POWEROFF );
+    }
+}
+
+void MainWindow::on_trayMenuDeviceDisconnect()
+{
+    auto ans = QMessageBox::question(this, tr("Disconnecting the device"), tr("Are you sure?"), QMessageBox::Yes | QMessageBox::No, QMessageBox::No );
+    if ( ans == QMessageBox::Yes )
+    {
+        changeDeviceStatus( DeviceStatus::DISCONNECT );
+    }
+}
+
 void MainWindow::on_tabWidget_tabBarClicked(int index)
 {
     Q_UNUSED(index);
@@ -385,6 +431,7 @@ void MainWindow::changeEvent(QEvent* e)
         if (this->windowState() & Qt::WindowMinimized)
         {
             QTimer::singleShot(100, this, SLOT(hide()));
+            return;
         }
 
         break;
@@ -406,21 +453,61 @@ void MainWindow::createTrayIcon()
     m_sysTrayIcon->setIcon( m_noDevice );
     setWindowIcon( m_noDevice );
 
-    // connect( m_sysTrayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(on_show_hide(QSystemTrayIcon::ActivationReason)) );
+    QAction *hide_action = new QAction( "Show app", m_sysTrayIcon );
+    connect( hide_action, &QAction::triggered, this, &MainWindow::show );
 
-    // QAction *quit_action = new QAction( "Exit", m_tray_icon );
-    // connect( quit_action, SIGNAL(triggered()), this, SLOT(on_exit()) );
+    QAction *quit_action = new QAction( "Exit", m_sysTrayIcon );
+    connect( quit_action, &QAction::triggered, this, &MainWindow::close );
 
-    // QAction *hide_action = new QAction( "Show/Hide", m_tray_icon );
-    // connect( hide_action, SIGNAL(triggered()), this, SLOT(on_show_hide()) );
+    createDeviceTrayMenu();
 
-    // QMenu *tray_icon_menu = new QMenu;
-    // tray_icon_menu->addAction( hide_action );
-    // tray_icon_menu->addAction( quit_action );
+    QMenu *tray_icon_menu = new QMenu;
+    tray_icon_menu->addMenu(m_trayDeviceMenu);
+    tray_icon_menu->addAction( hide_action );
+    tray_icon_menu->addAction( quit_action );
 
-    // m_tray_icon->setContextMenu( tray_icon_menu );
+    m_sysTrayIcon->setContextMenu( tray_icon_menu );
 
     m_sysTrayIcon->show();
+}
+
+void MainWindow::createDeviceTrayMenu()
+{
+    m_trayDeviceMenu = new QMenu(tr("Device"));
+
+    QAction *normal_action = new QAction( "Normal", m_trayDeviceMenu );
+    normal_action->setObjectName("mNormalSound");
+    connect( normal_action, &QAction::triggered, this, &MainWindow::on_trayMenuModeChanged );
+
+    QAction *ambient_action = new QAction( "Ambient sound", m_trayDeviceMenu );
+    ambient_action->setObjectName("mAmbientSound");
+    connect( ambient_action, &QAction::triggered, this, &MainWindow::on_trayMenuModeChanged );
+
+    QAction *reduction_action = new QAction( "Noise reduction", m_trayDeviceMenu );
+    reduction_action->setObjectName("mReductionSound");
+    connect( reduction_action, &QAction::triggered, this, &MainWindow::on_trayMenuModeChanged );
+
+    QAction *disconnect_action = new QAction( "Disconnect", m_trayDeviceMenu );
+    connect( disconnect_action, &QAction::triggered, this, &MainWindow::on_trayMenuDeviceDisconnect );
+
+    QAction *poweroff_action = new QAction( "Power-off", m_trayDeviceMenu );
+    connect( poweroff_action, &QAction::triggered, this, &MainWindow::on_trayMenuDevicePowerOff );
+
+    m_trayDeviceMenu->addSection(tr("Sound mode"));
+    m_trayDeviceMenu->addAction( normal_action );
+    m_trayDeviceMenu->addAction( ambient_action );
+    m_trayDeviceMenu->addAction( reduction_action );
+
+    m_trayDeviceMenu->addSection("Device");
+    m_trayDeviceMenu->addAction( disconnect_action );
+    m_trayDeviceMenu->addAction( poweroff_action );
+
+    m_trayDeviceMenu->setVisible(false);
+}
+
+void MainWindow::changeDeviceStatus(const DeviceStatus &status)
+{
+    Q_UNUSED(status)
 }
 
 

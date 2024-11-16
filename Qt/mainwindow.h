@@ -11,7 +11,7 @@
 #include "devices/basedevice.h"
 
 class QSystemTrayIcon;
-
+class QMenu;
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -50,11 +50,12 @@ private:
     static MainWindow* m_ptr;
     static const char* m_translatedNames[];
 
-    QSystemTrayIcon* m_sysTrayIcon;
+    QSystemTrayIcon* m_sysTrayIcon = nullptr;
     QIcon m_noDevice;
     QIcon m_deviceConnected_normal;
     QIcon m_deviceConnected_noiseCancelation;
     QIcon m_deviceConnected_ambientSound;
+    QMenu* m_trayDeviceMenu = nullptr;
 
     void changeDevice(const QString &deviceName);
     void connectDevice2Comm();
@@ -62,6 +63,9 @@ private:
 
     void switchToDevice();
     void createTrayIcon();
+    void createDeviceTrayMenu();
+
+    void changeDeviceStatus( const DeviceStatus &status );
 private slots:
     void connectToDevice(const QString &address, bool isBLE);
     void disconnectDevice();
@@ -74,6 +78,9 @@ private slots:
     void processDeviceFeature(const QString &feature, bool isBLE);
     void processDeviceStatus(const DeviceStatus &status);
 
+    void on_trayMenuModeChanged();
+    void on_trayMenuDevicePowerOff();
+    void on_trayMenuDeviceDisconnect();
 signals:
     void commStateChanged(bool connected);
     void readSettings(bool force = false);
