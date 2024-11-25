@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.toribasho.medifier.qt</id>
+
+  <name>mEDIFIER</name>
+  <summary>An open-source alternative to the Edifier Connect app</summary>
+  <metadata_license>CC-BY-SA-4.0</metadata_license>
+  <project_license>MIT</project_license>
+
+  <content_rating type="oars-1.1" />
+
+  <description>
+    <p>An open-source alternative to the Edifier Connect app</p>
+  </description>
+
+  <url type="homepage">https://github.com/toribasho/mEDIFIER</url>
+  <url type="bugtracker">https://github.com/toribasho/mEDIFIER/issues</url>
+  <url type="vcs-browser">https://github.com/toribasho/mEDIFIER</url>
+
+  <launchable type="desktop-id">io.github.toribasho.medifier.qt.desktop</launchable>
+</component>

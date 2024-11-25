@@ -2,11 +2,11 @@
 Version=1.0
 Type=Application
 
-Name=mEDIFIER
+Name=mEDIFIER-control
 Comment=An open-source alternative to the Edifier Connect app
 Comment[zh_CN]=官方漫步者APP的开源替代版
-Categories=AudioVideo;Audio;Utility;
+Categories=AudioVideo;Audio;Utility;Media
 
-Icon=medifier.png
-Exec=medifier
+Icon=medifier-control.png
+Exec=medifier-control
 Terminal=false
