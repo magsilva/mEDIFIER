@@ -82,18 +82,7 @@ MainWindow::MainWindow(QWidget *parent)
         createTrayIcon();
     }
 
-    m_autoConnect = m_settings->value("Global/AutoConnect", false).toBool();
-    if ( m_autoConnect )
-    {
-        m_settings->beginGroup("DeviceForm");
-        auto addressStr = m_settings->value("LastDeviceAddress").toString();
-        bool isBLE = m_settings->value("LastDeviceType").toString() == tr("BLE");
-        m_settings->endGroup();
-
-        connectToDevice(addressStr,isBLE);
-    }
-
-
+    autoConnect();
 }
 
 MainWindow::~MainWindow()
@@ -348,6 +337,8 @@ void MainWindow::processDeviceStatus(const DeviceStatus &status)
 
 void MainWindow::on_trayMenuModeChanged()
 {
+    autoConnect();
+
     auto ptr = qobject_cast<QAction*>(QObject::sender());
     if ( ptr->objectName() == "mNormalSound" )
     {
@@ -508,6 +499,20 @@ void MainWindow::createDeviceTrayMenu()
 void MainWindow::changeDeviceStatus(const DeviceStatus &status)
 {
     Q_UNUSED(status)
+}
+
+void MainWindow::autoConnect()
+{
+    m_autoConnect = m_settings->value("Global/AutoConnect", false).toBool();
+    if ( m_autoConnect )
+    {
+        m_settings->beginGroup("DeviceForm");
+        auto addressStr = m_settings->value("LastDeviceAddress").toString();
+        bool isBLE = m_settings->value("LastDeviceType").toString() == tr("BLE");
+        m_settings->endGroup();
+
+        connectToDevice(addressStr,isBLE);
+    }
 }
 
 

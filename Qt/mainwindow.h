@@ -66,6 +66,8 @@ private:
     void createDeviceTrayMenu();
 
     void changeDeviceStatus( const DeviceStatus &status );
+
+    void autoConnect();
 private slots:
     void connectToDevice(const QString &address, bool isBLE);
     void disconnectDevice();
