@@ -8,6 +8,7 @@
 class Comm : public QObject
 {
     Q_OBJECT
+
 public:
     explicit Comm(QObject *parent = nullptr);
     virtual void open(const QString& address) = 0;
@@ -19,6 +20,8 @@ public:
     static QBluetoothAddress getLocalAddress();
 
     static const int packetTimeoutMs = 5000;
+
+    bool isConnected() const { return connected; }
 public slots:
     bool sendCommand(const QByteArray& cmd, bool isRaw = false);
     bool sendCommand(const char* hexCmd, bool isRaw = false);
@@ -29,6 +32,7 @@ protected:
     QByteArray rxBuffer;
     qint64 lastReceiveTime = 0;
     QTimer* rxBufferCleaner;
+    bool connected = false;
 protected slots:
     void onReadyRead();
     void rxBufferCleanTask();

@@ -14,10 +14,12 @@ CommRFCOMM::CommRFCOMM(QObject *parent)
 void CommRFCOMM::open(const QString &address)
 {
     m_socket->connectToService(QBluetoothAddress(address), m_serviceUUID);
+    connected = true;
 }
 
 void CommRFCOMM::close()
 {
+    connected = false;
     m_socket->disconnectFromService();
     m_socket->close();
 }

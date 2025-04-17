@@ -27,11 +27,13 @@ void CommBLE::open(const QString &address)
     connect(m_Controller, QOverload<QLowEnergyController::Error>::of(&QLowEnergyController::error), this, &CommBLE::onErrorOccurred);
     connect(m_Controller, &QLowEnergyController::serviceDiscovered, this, &CommBLE::onServiceDiscovered);
     m_Controller->connectToDevice();
+    connected = true;
 
 }
 
 void CommBLE::close()
 {
+    connected = false;
     if(m_RxTxService != nullptr)
     {
         QLowEnergyDescriptor desc = m_RxTxService->characteristic(m_RxUUID).descriptor(QBluetoothUuid::ClientCharacteristicConfiguration);
