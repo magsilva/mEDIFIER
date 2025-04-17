@@ -90,5 +90,6 @@ signals:
 protected slots:
     void closeEvent(QCloseEvent *event);
     void changeEvent(QEvent *e);
+    void timerEvent(QTimerEvent *e);
 };
 #endif // MAINWINDOW_H

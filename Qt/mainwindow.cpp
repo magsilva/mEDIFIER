@@ -82,7 +82,9 @@ MainWindow::MainWindow(QWidget *parent)
         createTrayIcon();
     }
 
-    autoConnect();
+    m_autoConnect = m_settings->value("Global/AutoConnect", false).toBool();
+    if ( m_autoConnect )
+        autoConnect();
 }
 
 MainWindow::~MainWindow()
@@ -167,6 +169,7 @@ void MainWindow::disconnectDevice()
     m_comm->close();
     m_connected = false;
     emit commStateChanged(false);
+    processDeviceStatus(DeviceStatus::NO_DEVICE);
 }
 
 void MainWindow::onCommStateChanged(bool state)
@@ -331,13 +334,15 @@ void MainWindow::processDeviceStatus(const DeviceStatus &status)
         m_sysTrayIcon->setIcon(m_deviceConnected_ambientSound);
         break;
     default:
+        m_sysTrayIcon->setIcon(m_noDevice);
         break;
     }
 }
 
 void MainWindow::on_trayMenuModeChanged()
 {
-    autoConnect();
+    if ( m_autoConnect && !m_connected )
+        autoConnect();
 
     auto ptr = qobject_cast<QAction*>(QObject::sender());
     if ( ptr->objectName() == "mNormalSound" )
@@ -421,6 +426,7 @@ void MainWindow::changeEvent(QEvent* e)
     {
         if (this->windowState() & Qt::WindowMinimized)
         {
+            e->ignore();
             QTimer::singleShot(100, this, SLOT(hide()));
             return;
         }
@@ -432,6 +438,13 @@ void MainWindow::changeEvent(QEvent* e)
     }
 #endif
     QMainWindow::changeEvent(e);
+}
+
+void MainWindow::timerEvent(QTimerEvent *e)
+{
+#ifndef Q_OS_ANDROID
+#endif
+    QMainWindow::timerEvent(e);
 }
 
 void MainWindow::createTrayIcon()
@@ -452,7 +465,7 @@ void MainWindow::createTrayIcon()
 
     createDeviceTrayMenu();
 
-    QMenu *tray_icon_menu = new QMenu;
+    QMenu *tray_icon_menu = new QMenu(this);
     tray_icon_menu->addMenu(m_trayDeviceMenu);
     tray_icon_menu->addAction( hide_action );
     tray_icon_menu->addAction( quit_action );
@@ -464,7 +477,7 @@ void MainWindow::createTrayIcon()
 
 void MainWindow::createDeviceTrayMenu()
 {
-    m_trayDeviceMenu = new QMenu(tr("Device"));
+    m_trayDeviceMenu = new QMenu(tr("Device"),this);
 
     QAction *normal_action = new QAction( "Normal", m_trayDeviceMenu );
     normal_action->setObjectName("mNormalSound");
@@ -503,7 +516,6 @@ void MainWindow::changeDeviceStatus(const DeviceStatus &status)
 
 void MainWindow::autoConnect()
 {
-    m_autoConnect = m_settings->value("Global/AutoConnect", false).toBool();
     if ( m_autoConnect )
     {
         m_settings->beginGroup("DeviceForm");
