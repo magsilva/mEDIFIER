@@ -1,6 +1,9 @@
 #include "commble.h"
 
+#include <QLowEnergyController>
 #include <QBluetoothLocalDevice>
+#include <QBluetoothDeviceInfo>
+#include <QBluetoothAddress>
 #include <QDateTime>
 
 CommBLE::CommBLE(QObject *parent)
@@ -9,7 +12,7 @@ CommBLE::CommBLE(QObject *parent)
 
 }
 
-void CommBLE::open(const QString &address)
+void CommBLE::open(const QBluetoothDeviceInfo &deviceInfo)
 {
     if(m_Controller != nullptr)
         m_Controller->deleteLater();
@@ -18,13 +21,9 @@ void CommBLE::open(const QString &address)
     if(localAddress.isNull())
         return; // invalid
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
-    m_BLEController = new QLowEnergyController(QBluetoothAddress(address), localAddress);
-#else
-    m_Controller = QLowEnergyController::createCentral(QBluetoothAddress(address), localAddress);
-#endif
+    m_Controller = QLowEnergyController::createCentral(deviceInfo);
     connect(m_Controller, &QLowEnergyController::connected, m_Controller, &QLowEnergyController::discoverServices);
-    connect(m_Controller, QOverload<QLowEnergyController::Error>::of(&QLowEnergyController::error), this, &CommBLE::onErrorOccurred);
+    connect(m_Controller, &QLowEnergyController::errorOccurred, this, &CommBLE::onErrorOccurred);
     connect(m_Controller, &QLowEnergyController::serviceDiscovered, this, &CommBLE::onServiceDiscovered);
     m_Controller->connectToDevice();
 
@@ -34,7 +33,7 @@ void CommBLE::close()
 {
     if(m_RxTxService != nullptr)
     {
-        QLowEnergyDescriptor desc = m_RxTxService->characteristic(m_RxUUID).descriptor(QBluetoothUuid::ClientCharacteristicConfiguration);
+        QLowEnergyDescriptor desc = m_RxTxService->characteristic(m_RxUUID).descriptor(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration);
         m_RxTxService->writeDescriptor(desc, QByteArray::fromHex("0000"));
         m_RxTxService->deleteLater();
         m_RxTxService = nullptr;
@@ -71,7 +70,7 @@ void CommBLE::onServiceDetailDiscovered(QLowEnergyService::ServiceState newState
     auto service = qobject_cast<QLowEnergyService*>(sender());
     if(newState == QLowEnergyService::InvalidService)
         deleteService = true;
-    else if(newState == QLowEnergyService::ServiceDiscovered)
+    else if(newState == QLowEnergyService::RemoteServiceDiscovered)
     {
         deleteService = true;
         const QList<QLowEnergyCharacteristic> chars = service->characteristics();
@@ -105,10 +104,10 @@ void CommBLE::onServiceDetailDiscovered(QLowEnergyService::ServiceState newState
             {
                 connect(m_RxTxService, &QLowEnergyService::stateChanged, this, &CommBLE::onServiceStateChanged);
                 // Rx
-                connect(m_RxTxService, QOverload<QLowEnergyService::ServiceError>::of(&QLowEnergyService::error), this, &CommBLE::onErrorOccurred);
+                connect(m_RxTxService, &QLowEnergyService::errorOccurred, this, &CommBLE::onErrorOccurred);
                 connect(m_RxTxService, &QLowEnergyService::characteristicChanged, this, &CommBLE::onDataArrived);
                 connect(m_RxTxService, &QLowEnergyService::characteristicRead, this, &CommBLE::onDataArrived); // not necessary
-                QLowEnergyDescriptor desc = m_RxTxService->characteristic(m_RxUUID).descriptor(QBluetoothUuid::ClientCharacteristicConfiguration);
+                QLowEnergyDescriptor desc = m_RxTxService->characteristic(m_RxUUID).descriptor(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration);
                 m_RxTxService->writeDescriptor(desc, QByteArray::fromHex("0100")); // Enable notify
                 // Tx
                 m_TxCharacteristic = m_RxTxService->characteristic(TxUUID);

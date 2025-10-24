@@ -572,8 +572,8 @@ void BaseDevice::on_fileWriteDeviceButton_clicked()
     QList<QJsonValue> cmdList[3];
     for(const auto& cmdItem : cmdInFile)
     {
-        const QString cmd = cmdItem["cmd"].toString();
-        int priority = cmdItem["priority"].toInt(0);
+        const QString cmd = cmdItem.toObject().value(QStringLiteral("cmd")).toString(); //cmdItem["cmd"].toString();
+        int priority = cmdItem.toObject().value(QStringLiteral("priority")).toInt(0); // cmdItem["priority"].toInt(0);
         if(cmd.isEmpty())
             continue;
         else if(priority < 3)

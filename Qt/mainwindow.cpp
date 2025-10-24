@@ -43,7 +43,7 @@ MainWindow::MainWindow(QWidget *parent)
         }
     }
     m_settings = new QSettings(configPath, QSettings::IniFormat);
-    m_settings->setIniCodec("UTF-8");
+    // m_settings->setIniCodec("UTF-8");
 #endif
 
     m_deviceForm = new DeviceForm;
@@ -99,7 +99,7 @@ void MainWindow::loadDeviceInfo()
     }
 }
 
-void MainWindow::connectToDevice(const QString& address, bool isBLE)
+void MainWindow::connectToDevice(const QBluetoothDeviceInfo& address, bool isBLE)
 {
     if(m_comm != nullptr)
     {

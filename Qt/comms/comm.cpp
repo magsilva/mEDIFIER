@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QBluetoothLocalDevice>
 #include <QDateTime>
+#include <QIODevice>
 
 Comm::Comm(QObject *parent)
     : QObject{parent}
@@ -50,11 +51,13 @@ void Comm::handlePackets()
 void Comm::onReadyRead()
 {
     lastReceiveTime = QDateTime::currentMSecsSinceEpoch();
-    QByteArray rawData = qobject_cast<QIODevice*>(sender())->readAll();
-    rxBuffer.append(rawData);
-    handlePackets();
-    if(!rxBufferCleaner->isActive())
-        rxBufferCleaner->start();
+    if (auto dev = qobject_cast<QIODevice*>(sender())) {
+	QByteArray rawData = dev->readAll();
+	rxBuffer.append(rawData);
+        handlePackets();
+        if(!rxBufferCleaner->isActive())
+           rxBufferCleaner->start();
+    }
 }
 
 QByteArray Comm::addPacketHead(QByteArray cmd)
